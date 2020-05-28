@@ -37,15 +37,16 @@ func recordMetrics(sess *session.Session) {
 				GroupBy:     []*costexplorer.GroupDefinition{&groupdef},
 			})
 
+			fmt.Println("updating values from AWS")
 			err := req.Send()
 			if err == nil {
 
 				for _, item := range resp.ResultsByTime[0].Groups {
-					fmt.Println(item)
 					value, _ := strconv.ParseFloat(*item.Metrics["BlendedCost"].Amount, 64)
 					serviceCost.With(prometheus.Labels{"service": *item.Keys[0]}).Set(value)
 				}
 
+				fmt.Println("values updated, waiting for next day")
 				time.Sleep(24 * time.Hour)
 
 			} else {
@@ -62,6 +63,7 @@ var (
 	serviceCost = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "aws_service_daily_cost",
+			Help: "AWS daily cost by service",
 		},
 		[]string{
 			"service",
@@ -71,6 +73,7 @@ var (
 
 func main() {
 
+	fmt.Println("Starting, making a new session")
 	sess, err := session.NewSession()
 
 	if err != nil {
