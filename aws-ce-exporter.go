@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -74,13 +73,9 @@ var (
 func main() {
 
 	fmt.Println("Starting, making a new session")
-	sess, err := session.NewSession()
-
-	if err != nil {
-		fmt.Println("Error ocurred while getting a new session")
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 
 	recordMetrics(sess)
 
